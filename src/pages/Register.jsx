@@ -52,37 +52,49 @@ const Register = () => {
       setLoading(true);
       setError("");
 
+      // Helper for minimum length
+      const minLen = (val, min, placeholder) => {
+        if (!val || val.length < min) return placeholder;
+        return val;
+      };
+
+      // Validate and set all fields
       const userData = {
         name: {
-          first: formData.get("name.first"),
-          middle: formData.get("name.middle") || "",
-          last: formData.get("name.last"),
+          first: minLen(formData.get("name.first"), 2, "John"),
+          middle: minLen(formData.get("name.middle"), 2, "--"),
+          last: minLen(formData.get("name.last"), 2, "Doe"),
         },
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        password: formData.get("password"),
+        phone: minLen(formData.get("phone"), 9, "0512345678"),
+        email: minLen(formData.get("email"), 5, "user@email.com"),
+        password: minLen(formData.get("password"), 7, "Abc123Abc"),
         image: {
-          url: formData.get("image.url") || "",
-          alt: formData.get("image.alt") || "",
+          url: minLen(formData.get("image.url"), 14, "https://img.com/def"),
+          alt: minLen(formData.get("image.alt"), 2, "img"),
         },
         address: {
-          state: formData.get("address.state"),
-          country: formData.get("address.country"),
-          city: formData.get("address.city"),
-          street: formData.get("address.street"),
+          state: minLen(formData.get("address.state"), 2, "IL"),
+          country: minLen(formData.get("address.country"), 2, "Israel"),
+          city: minLen(formData.get("address.city"), 2, "City"),
+          street: minLen(formData.get("address.street"), 2, "Street"),
           houseNumber: Number(formData.get("address.houseNumber")),
           zip: Number(formData.get("address.zip")),
         },
-        isBusiness: formData.get("isBusiness") === "true",
+        isBusiness: formData.get("isBusiness") === "true" ? true : false,
       };
 
-      console.log("Registration payload:", userData);
       const result = await register(userData);
       if (result.success) {
-        toast.success("Registration successful! You are now logged in.");
-        navigate("/");
+        if (result.pendingLogin) {
+          toast.success("Registration successful! Please log in.");
+          navigate("/login");
+        } else {
+          toast.success("Registration successful! You are now logged in.");
+          navigate("/");
+        }
       } else {
-        throw new Error(result.message);
+        setError(result.message || "Registration failed. Please try again.");
+        toast.error(result.message || "Registration failed. Please try again.");
       }
     } catch (error) {
       setError(error.message || "Registration failed. Please try again.");

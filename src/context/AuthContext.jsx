@@ -50,15 +50,19 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post("/users/login", { email, password });
+      const data = response.data;
+      let token = null;
+      if (typeof data === "string") token = data;
+      else if (data?.token && typeof data.token === "string")
+        token = data.token;
 
-      if (typeof response.data === "string") {
-        const token = response.data;
+      if (token) {
         localStorage.setItem("token", token);
         await fetchUserData();
         return { success: true };
-      } else {
-        throw new Error("Invalid token format received");
       }
+
+      return { success: true, pendingLogin: true };
     } catch (error) {
       return {
         success: false,
@@ -70,14 +74,19 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post("/users", userData);
-      const token = response.data;
-      if (typeof token === "string") {
+      const data = response.data;
+      let token = null;
+      if (typeof data === "string") token = data;
+      else if (data?.token && typeof data.token === "string")
+        token = data.token;
+
+      if (token) {
         localStorage.setItem("token", token);
         await fetchUserData();
         return { success: true };
-      } else {
-        throw new Error("Invalid token format received");
       }
+
+      return { success: true, pendingLogin: true };
     } catch (error) {
       return {
         success: false,
